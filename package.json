@@ -1,0 +1,22 @@
+{
+  "name": "naive_bayes_js",
+  "version": "1.0.0",
+  "description": "Naive Bayes classifier in JS",
+  "main": "nb.js",
+  "scripts": {
+    "test": "karma start"
+  },
+  "author": "Thomas Buida",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-jshint": "^2.0.1",
+    "gulp-watch": "^4.3.5",
+    "jasmine-core": "^2.4.1",
+    "jshint": "^2.9.2",
+    "jshint-stylish": "^2.2.0",
+    "karma": "^0.13.22",
+    "karma-chrome-launcher": "^1.0.1",
+    "karma-jasmine": "^1.0.2"
+  }
+}
