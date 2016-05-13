@@ -1,7 +1,14 @@
-#Implementation of Naive Bayes Classifier geared towards text based applications
+#Implementation of Naive Bayes Classifier 
+###This is mainly geared towards text based applications (i.e. classifying emails as spam or not spam, classifying song lyrics to a specific artist, etc). This was not made to be a robust NB classifier to handle all possible feature structures/types. It was made to get more familiar with NB classifiers and for general Javascript practice.
 
-How to use it
+###Punch list for future
+[ ] Laplace correction
+[X] Calculate probabilites in log space to preven floating point underflow
+[/] Support for reading in file as training data (in progress)
+[ ] Pass in probabilities for each label (currently priors are all equal)
 
+
+#How to use it:
 ```javascript
 "use strict";
 

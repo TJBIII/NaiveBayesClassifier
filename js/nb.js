@@ -58,7 +58,6 @@ NaiveBayesClf.prototype.predict = function (features_test) {
 
   //split each test string into an array of words
   tests = processTests(features_test);
-  // console.log("tests", tests);
 
   //assumes each label is equally likely
   let pLabel = 1 / self.unique_labels.size;
@@ -68,7 +67,6 @@ NaiveBayesClf.prototype.predict = function (features_test) {
       labelScores[i] = pOfLabel(label, pLabel, self.data, test, self.unique_labels)
     });
   });
-
 
   return labelScores;
 }
@@ -135,13 +133,11 @@ let pOfLabel = (label, pLabel, dataStore, test, unique_labels) => {
 
   //combine all of the Psub(i)'s for the labels into the final prob for each label
   //will compute in log space -> https://en.wikipedia.org/wiki/Naive_Bayes_spam_filtering#Other_expression_of_the_formula_for_combining_individual_probabilities
-
   let probsLn = probabilities.map( (p) => p != 0 ? (p < 1 ? (Math.log(1- p) - Math.log(p)) : 0) : p);
 
-  // let probsLn = probabilities.map( (p) => p != 0 ? Math.log(1- p) - Math.log(p) : p);
   console.log("probs ln", probsLn);
-  let eta = probsLn.reduce( (prev, curr) => prev + curr);
 
+  let eta = probsLn.reduce( (prev, curr) => prev + curr);
 
   return 1 / ( 1 + Math.pow(Math.E, eta));
 }
@@ -163,9 +159,6 @@ let pOfWordGivenLabel = (word, label, dataStore) => {
       totalWordsForLabel += dataItem.words[word][label];
     }
   });
-
-  // console.log("ct", ct);
-  // console.log("totalWordsForLabel", totalWordsForLabel);
 
   return ct / totalWordsForLabel;
 }
