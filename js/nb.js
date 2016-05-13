@@ -125,17 +125,25 @@ let pOfLabel = (label, pLabel, dataStore, test, unique_labels) => {
     //now calculate P(word) which is P(word|label1) * P(label1) + ... P(word|labelN) * P(labelN)
     let pWord = 0
     unique_labels.forEach( (label) => {
-      pWord += pOfWordGivenLabel(word, label, dataStore);
+      console.log("pword", pWord);
+      pWord += pOfWordGivenLabel(word, label, dataStore) * pLabel;
     })
     console.log(`probability of "${word}"" is`, pWord);
 
     console.log("");
     probabilities.push( pWord > 0 ? (pWordLabel * pLabel) / pWord  : 0 );
-  })
+  });
 
   console.log("probs", probabilities );
 
-  return probabilities;
+  //combine all of the Psub(i)'s for the labels into the final prob for each label
+  //will compute in log space -> https://en.wikipedia.org/wiki/Naive_Bayes_spam_filtering#Other_expression_of_the_formula_for_combining_individual_probabilities
+  let probsLn = probabilities.map( (p) => p != 0 ? (p != 1 ? (Math.log(1- p) - Math.log(p)) : 0) : p);
+  console.log(probsLn);
+  let eta = probsLn.reduce( (prev, curr) => prev + curr);
+
+
+  return 1 / ( 1 + Math.pow(Math.E, eta));
 }
 
 let pOfWordGivenLabel = (word, label, dataStore) => {
@@ -177,5 +185,5 @@ let argMax = (arr) => {
  
 
 let nbc = NaiveBayesClf();
-nbc.train([['attention money please give me money'],['attention your service requested'],['hey dad how are you'], ['buy viagra are today']], ['spam','spam','not spam', 'spam']);
+nbc.train([['attention money please give me'],['attention your service money requested'],['hey dad how are you'], ['buy viagra are today']], ['spam','spam','not spam', 'spam']);
 nbc.predict([['money to buy it today are']]);
