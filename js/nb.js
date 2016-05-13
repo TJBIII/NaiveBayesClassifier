@@ -1,5 +1,6 @@
 "use strict";
-// var util = require('util');
+var util = require('util');
+let fs = require('fs');
 
 function NaiveBayesClf() {
   if (!this){
@@ -9,8 +10,6 @@ function NaiveBayesClf() {
   this.data = [];
   this.samplesTrained = 0;
 }
-
-
 
 NaiveBayesClf.prototype.train = function () {
 
@@ -49,8 +48,8 @@ NaiveBayesClf.prototype.train = function () {
 
   // console.log("self.data[i]", util.inspect(self.data, false, null));
   self.samplesTrained += dataLength;
+  console.log("number of samples trained", self.samplesTrained);
 }
-
 
 
 NaiveBayesClf.prototype.predict = function (features_test) {
@@ -127,7 +126,7 @@ let pOfLabel = (label, pLabel, dataStore, test, unique_labels) => {
       // console.log("pword", pWord);
       pWord += pOfWordGivenLabel(word, label, dataStore) * pLabel;
     })
-    console.log(`probability of "${word}"" is`, pWord);
+    console.log(`probability of "${word}" is`, pWord);
 
     console.log("");
     probabilities.push( pWord > 0 ? (pWordLabel * pLabel) / pWord  : 0 );
@@ -137,7 +136,10 @@ let pOfLabel = (label, pLabel, dataStore, test, unique_labels) => {
 
   //combine all of the Psub(i)'s for the labels into the final prob for each label
   //will compute in log space -> https://en.wikipedia.org/wiki/Naive_Bayes_spam_filtering#Other_expression_of_the_formula_for_combining_individual_probabilities
+
   let probsLn = probabilities.map( (p) => p != 0 ? (p < 1 ? (Math.log(1- p) - Math.log(p)) : 0) : p);
+
+  // let probsLn = probabilities.map( (p) => p != 0 ? Math.log(1- p) - Math.log(p) : p);
   console.log("probs ln", probsLn);
   let eta = probsLn.reduce( (prev, curr) => prev + curr);
 
@@ -176,5 +178,33 @@ let nbc = NaiveBayesClf();
 // console.log('prediction', nbc.predict([['please give me money to buy viagra today as your service requested']]));
 
 
-nbc.train([['attention money please give me'],['attention your service money requested'],['hey dad how are you please'], ['buy viagra are today'], ['hey do you want to meet me at the bar']], ['spam','spam','not spam', 'spam', 'not spam']);
-console.log('prediction', nbc.predict([['please give me money today']]));
+// nbc.train([['attention money please give me'],['attention your service money requested'],['hey dad how are you please'], ['buy our pills today'], ['hey do you want to meet me at the bar']], ['spam','spam','not spam', 'spam', 'not spam']);
+// console.log('prediction', nbc.predict([['please give me money today']]));
+
+
+let features_train_doom = fs.readFileSync('doomLyrics.txt').toString().split('\n');
+let labels_train = [];
+features_train_doom = features_train_doom.map( (e) => {
+  //add the label
+  labels_train.push('doom');
+  //return the line as an array
+  e = e.toLowerCase();
+  return new Array(e);
+});
+
+let features_train_not_doom = fs.readFileSync('notDoomLyrics.txt').toString().split('\n');
+
+features_train_not_doom = features_train_not_doom.map( (e) => {
+  labels_train.push('not doom');
+  e = e.toLowerCase();
+  return new Array(e);
+});
+
+let features_train = features_train_doom.concat(features_train_not_doom);
+
+console.log(features_train.length, labels_train.length);
+nbc.train(features_train, labels_train);
+
+
+console.log("predict: 'i love you':", nbc.predict([['i\'ll love you']]));
+console.log("predict: 'metal face villain':", nbc.predict([['known amongst face figaro gin tang nimble fang']]));
