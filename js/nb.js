@@ -1,4 +1,5 @@
 "use strict";
+var util = require('util');
 
 function NaiveBayesClf() {
   if (!this){
@@ -48,24 +49,31 @@ NaiveBayesClf.prototype.train = function () {
 
   console.log("self.data[i]", self.data);
   self.samplesTrained += dataLength;
-  console.log("samples trained", self.samplesTrained);
 }
 
 
 
 NaiveBayesClf.prototype.predict = function (features_test) {
-  let processedDataItems,
+  let tests,
     labelScores = [],
     self = this;
 
-  processedDataItems = processDataItems(features_test);
-  console.log("proccessedDataItems", processedDataItems);
+  //split each test string into an array of words
+  tests = processDataItems(features_test);
+  // console.log("tests", tests);
 
-  self.unique_labels.forEach( (label, i) => {
-    // labelScores[i] = pForLabel(label, self.data, processedDataItems);
+  //assumes each label is equally likely
+  let pLabel = 1 / self.unique_labels.size;
+
+  tests.forEach( (test) => {
+    self.unique_labels.forEach( (label, i) => {
+      labelScores[i] = pOfLabel(label, pLabel, self.data, test, self.unique_labels)
+    });
   });
 
-  return self.unique_labels[argMax(labelScores)];
+  console.log("labelScores", labelScores);
+
+  // return self.unique_labels[argMax(labelScores)];
 }
 
 
@@ -100,53 +108,66 @@ let processDataItems = (items) => {
   return processed;
 }
 
-let pForLabel = (label, dataStore, processed) => {
+let pOfLabel = (label, pLabel, dataStore, test, unique_labels) => {
+  //NEED TO ADD LAPLACE SMOOTHING
+
   //probabilites for a label
   let probabilities = [];
   console.log("");
-  console.log("processed", processed);
-  dataStore.forEach( (dataItem, i) => {
-    console.log("processed[i]", processed[i]);
-    processed[i].forEach( (word, j) => {
-      probabilities.push(pOfWordGivenLabel(word, label, dataItem))
-    });
-  });
+  console.log("test", test);
 
-  return combineProbs(probabilities);
+  test.forEach( (word) => {
+
+    //first get P(word|label)
+    let pWordLabel = pOfWordGivenLabel(word, label, dataStore);
+    console.log(`probability of "${word}" given "${label}"`, pWordLabel);
+
+    //now calculate P(word) which is P(word|label1) * P(label1) + ... P(word|labelN) * P(labelN)
+    let pWord = 0
+    unique_labels.forEach( (label) => {
+      pWord += pOfWordGivenLabel(word, label, dataStore);
+    })
+    console.log(`probability of "${word}"" is`, pWord);
+
+    console.log("");
+    probabilities.push( pWord > 0 ? (pWordLabel * pLabel) / pWord  : 0 );
+  })
+
+  console.log("probs", probabilities );
+
+  return probabilities;
 }
 
-let pOfWordGivenLabel = (word, label, dataItem) => {
+let pOfWordGivenLabel = (word, label, dataStore) => {
   // P(word|label) is num of times that word appears for a given label divided by the total count of all words for that label
-  let givenClassTotal = dataItem.labels[label];
-  let ct;
+  let ct = 0,
+      totalWordsForLabel = 0;
 
-  //most basic laplace correction
-  if (dataItem.words[word] === undefined){
-    ct = 1;
-  } else {
-    ct = dataItem.words[word][label];
-  }
-
-  if (ct === 0) {
-    //set the ct to 1 and increase all other label cts
-    ct = 1;
-
-    for (let incLabel in dataItem.words[words]){
-      console.log("incLabel", incLabel);
-      if (dataItem.words[word].hasOwnProperty(incLabel)){
-        dataItem.words[word][incLabel] += 1;
-      }
+  dataStore.forEach( (dataItem) => {
+    // console.log(`searching for "${word}"`, util.inspect(dataItem.words[word], false, null));
+    if (dataItem.words[word] !== undefined){
+      //sum the number of times the word appeared for the given label
+      ct += dataItem.words[word][label];
     }
-  }
 
-  return ct / givenClassTotal;
+    //sum the total number of words for the given label
+    for (let word in dataItem.words) {
+      totalWordsForLabel += dataItem.words[word][label];
+    }
+  });
+
+  // console.log("ct", ct);
+  // console.log("totalWordsForLabel", totalWordsForLabel);
+
+  return ct / totalWordsForLabel;
 }
 
 
 let argMax = (arr) => {
-  let maxIdx = 0;
+  let maxIdx = 0,
+      i;
 
-  for (let i = 0; i < arr.length; i++){
+  for (i = 0; i < arr.length; i++){
     if (arr[i] > arr[maxIdx]){
       maxIdx = i;
     }
@@ -156,5 +177,5 @@ let argMax = (arr) => {
  
 
 let nbc = NaiveBayesClf();
-nbc.train([['attention please give me money'],['attention your service requested'],['hey dad how are you'], ['buy viagra today']], ['spam','spam','not spam', 'spam']);
-nbc.predict([['money to buy it today']]);
+nbc.train([['attention money please give me money'],['attention your service requested'],['hey dad how are you'], ['buy viagra are today']], ['spam','spam','not spam', 'spam']);
+nbc.predict([['money to buy it today are']]);
