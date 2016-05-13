@@ -1,5 +1,5 @@
 "use strict";
-var util = require('util');
+// var util = require('util');
 
 function NaiveBayesClf() {
   if (!this){
@@ -47,7 +47,7 @@ NaiveBayesClf.prototype.train = function () {
 
   });
 
-  console.log("self.data[i]", self.data);
+  // console.log("self.data[i]", util.inspect(self.data, false, null));
   self.samplesTrained += dataLength;
 }
 
@@ -59,7 +59,7 @@ NaiveBayesClf.prototype.predict = function (features_test) {
     self = this;
 
   //split each test string into an array of words
-  tests = processDataItems(features_test);
+  tests = processTests(features_test);
   // console.log("tests", tests);
 
   //assumes each label is equally likely
@@ -71,9 +71,8 @@ NaiveBayesClf.prototype.predict = function (features_test) {
     });
   });
 
-  console.log("labelScores", labelScores);
 
-  // return self.unique_labels[argMax(labelScores)];
+  return labelScores;
 }
 
 
@@ -98,7 +97,7 @@ let addWordToDataStore = (dataStore, word, unique_labels) => {
   unique_labels.forEach( (label) => { dataStore.words[word][label] = 0 });
 }
 
-let processDataItems = (items) => {
+let processTests = (items) => {
   let processed = [];
 
   items.forEach( (item, i) => {
@@ -125,7 +124,7 @@ let pOfLabel = (label, pLabel, dataStore, test, unique_labels) => {
     //now calculate P(word) which is P(word|label1) * P(label1) + ... P(word|labelN) * P(labelN)
     let pWord = 0
     unique_labels.forEach( (label) => {
-      console.log("pword", pWord);
+      // console.log("pword", pWord);
       pWord += pOfWordGivenLabel(word, label, dataStore) * pLabel;
     })
     console.log(`probability of "${word}"" is`, pWord);
@@ -138,8 +137,8 @@ let pOfLabel = (label, pLabel, dataStore, test, unique_labels) => {
 
   //combine all of the Psub(i)'s for the labels into the final prob for each label
   //will compute in log space -> https://en.wikipedia.org/wiki/Naive_Bayes_spam_filtering#Other_expression_of_the_formula_for_combining_individual_probabilities
-  let probsLn = probabilities.map( (p) => p != 0 ? (p != 1 ? (Math.log(1- p) - Math.log(p)) : 0) : p);
-  console.log(probsLn);
+  let probsLn = probabilities.map( (p) => p != 0 ? (p < 1 ? (Math.log(1- p) - Math.log(p)) : 0) : p);
+  console.log("probs ln", probsLn);
   let eta = probsLn.reduce( (prev, curr) => prev + curr);
 
 
@@ -169,21 +168,13 @@ let pOfWordGivenLabel = (word, label, dataStore) => {
 
   return ct / totalWordsForLabel;
 }
-
-
-let argMax = (arr) => {
-  let maxIdx = 0,
-      i;
-
-  for (i = 0; i < arr.length; i++){
-    if (arr[i] > arr[maxIdx]){
-      maxIdx = i;
-    }
-  }
-  return i;
-}
  
 
 let nbc = NaiveBayesClf();
-nbc.train([['attention money please give me'],['attention your service money requested'],['hey dad how are you'], ['buy viagra are today']], ['spam','spam','not spam', 'spam']);
-nbc.predict([['money to buy it today are']]);
+
+// nbc.train([['send me money to nigeria'],['send money to us'],['dad did you send the money to me to go see the concert with mom on tuesday']], ['spam','unknown','not spam']);
+// console.log('prediction', nbc.predict([['please give me money to buy viagra today as your service requested']]));
+
+
+nbc.train([['attention money please give me'],['attention your service money requested'],['hey dad how are you please'], ['buy viagra are today'], ['hey do you want to meet me at the bar']], ['spam','spam','not spam', 'spam', 'not spam']);
+console.log('prediction', nbc.predict([['please give me money today']]));
