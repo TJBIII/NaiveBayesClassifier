@@ -14,8 +14,8 @@ let nbc = NaiveBayesClf();
 // console.log('prediction', nbc.predict([['please give me money today']]));
 
 
-nbc.train([['attention money please give me', 're: wtf'],['attention your service money requested', 're: yo'],['hey dad how are you please', 'update'], ['buy our pills today','act now!'], ['hey do you want to meet me at the bar', 'friday']], ['spam','spam','not spam', 'spam', 'not spam']);
-console.log('prediction', nbc.predict([['please give me money today', 're: friday']]));
+nbc.train([['attention money please give me', 're: update wtf'],['attention your service money requested', 're: yo'],['hey dad how are you please', 'update'], ['buy our pills today','act now!'], ['hey do you want to meet me at the bar', 'friday']], ['spam','spam','not spam', 'spam', 'not spam']);
+console.log('prediction', nbc.predict([['please give me money today', 're: friday'], ['dad meet at the bar please', 'update friday']]));
 
 // /****** Lyrics Example 1 ******/
 // let features_train_doom = fs.readFileSync('doomLyrics.txt').toString().split('\n');

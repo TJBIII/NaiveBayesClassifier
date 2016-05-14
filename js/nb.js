@@ -26,11 +26,11 @@ NaiveBayesClf.prototype.train = function () {
   }
 
   self.unique_labels = new Set(labels_train);
-  console.log("unique_labels", Array.from(self.unique_labels));
+  // console.log("unique_labels", Array.from(self.unique_labels));
 
   let numFeatures = features_train[0].length;
   initializeDataStore(numFeatures, self.data, self.unique_labels);
-  console.log("this.data", this.data);
+  // console.log("this.data", this.data);
 
   //for each training example (ie ['email body text', 'email subject text'])
     //for each feature group in the training example, split into words
@@ -60,50 +60,32 @@ NaiveBayesClf.prototype.train = function () {
 
 NaiveBayesClf.prototype.predict = function (features_test) {
   let tests,
-    labelScores = [],
-    self = this;
+      featureGroup,
+      labelGroup,
+      labelScores = [],
+      self = this;
 
   //assumes each label is equally likely
   let pLabel = 1 / self.unique_labels.size;
 
-  // features_test.forEach( (example, exampleIdx) => {
-  //   console.log("testexample", example);
-  //   example.forEach( (feature, i) => {
-  //     let testFeatureElements = wordsFromString(feature);
-  //     console.log("testfeatureElements", testFeatureElements);
-  //     self.unique_labels.forEach( (label, i) => {
-  //     labelScores[i] = pOfLabel(label, pLabel, self.data, testFeatureElements, self.unique_labels);
-  //     });
-  //   });
-  // });
-
   features_test.forEach( (example, exampleIdx) => {
-    console.log("testexample", example);
+    // console.log("testexample", example);
+    labelScores[exampleIdx] = [];
+
     example.forEach( (feature, featureIdx) => {
-      console.log("feature", feature);
       let testFeatureElements = wordsFromString(feature);
-      console.log("testfeatureElements", testFeatureElements);
+      // console.log("testfeatureElements", testFeatureElements);
+
+      labelScores[exampleIdx][featureIdx] = [];
+
+      featureGroup = self.data.features[featureIdx];
+      labelGroup = self.data.labels[featureIdx];
 
       self.unique_labels.forEach( (label, i) => {
-      labelScores[i] = pOfLabel(label, pLabel, self.data, testFeatureElements, self.unique_labels, self.data.features[featureIdx], self.data.labels[featureIdx]);
+        labelScores[exampleIdx][featureIdx][i] = pOfLabel(label, pLabel, testFeatureElements, self.unique_labels, featureGroup, labelGroup);
       });
     });
   });
-
-
-
-
-  //split each test string into an array of words
-  // tests = processTests(features_test);
-
-
-  // tests.forEach( (test) => {
-  //   console.log("test", test);
-  //   self.unique_labels.forEach( (label, i) => {
-  //     labelScores[i] = pOfLabel(label, pLabel, self.data, test, self.unique_labels)
-  //   });
-  // });
-
   return labelScores;
 }
 
@@ -121,8 +103,6 @@ let initializeDataStore = (numFeatures, dataStore, unique_labels) => {
 
     unique_labels.forEach( (label) => {dataStore.labels[i][label] = 0;});
   }
-
-  // console.log('initializeDataStore', dataStore);
 }
 
 let addWordToDataStore = (dataStore, word, unique_labels) => {
@@ -131,18 +111,7 @@ let addWordToDataStore = (dataStore, word, unique_labels) => {
 }
 
 
-
-// let processTests = (items) => {
-//   let processed = [];
-//   items.forEach( (item, i) => {
-//     processed[i] = wordsFromString(item[0]);
-//   })
-//   return processed;
-// }
-
-
-
-let pOfLabel = (label, pLabel, dataStore, test, unique_labels, featureData, labelData) => {
+let pOfLabel = (label, pLabel, test, unique_labels, featureData, featureLabelData) => {
   //NEED TO ADD LAPLACE SMOOTHING
 
   //probabilites for a label
@@ -153,16 +122,15 @@ let pOfLabel = (label, pLabel, dataStore, test, unique_labels, featureData, labe
 
 
   test.forEach( (word) => {
-
     //first get P(word|label)
-    let pWordLabel = pOfWordGivenLabel(word, label, featureData, labelData);
+    let pWordLabel = pOfWordGivenLabel(word, label, featureData, featureLabelData);
     console.log(`probability of "${word}" given "${label}"`, pWordLabel);
 
     //now calculate P(word) which is P(word|label1) * P(label1) + ... P(word|labelN) * P(labelN)
     let pWord = 0
     unique_labels.forEach( (label) => {
       // console.log("pword", pWord);
-      pWord += pOfWordGivenLabel(word, label, dataStore) * pLabel;
+      pWord += pOfWordGivenLabel(word, label, featureData, featureLabelData) * pLabel;
     })
     console.log(`probability of "${word}" is`, pWord);
 
@@ -183,7 +151,7 @@ let pOfLabel = (label, pLabel, dataStore, test, unique_labels, featureData, labe
   return 1 / ( 1 + Math.pow(Math.E, eta));
 }
 
-let pOfWordGivenLabel = (word, label, featureData, labelData) => {
+let pOfWordGivenLabel = (word, label, featureData, featureLabelData) => {
   // P(word|label) is num of times that word appears for a given label divided by the total count of all words for that label
   let ct = 0,
       totalLabelCt = 0;
@@ -194,8 +162,7 @@ let pOfWordGivenLabel = (word, label, featureData, labelData) => {
     }
 
     //total number of words for the given label
-    console.log("labelData", labelData);
-    totalLabelCt = labelData[label];
+    totalLabelCt = featureLabelData[label];
 
   return ct / totalLabelCt;
 }
