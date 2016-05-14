@@ -6,7 +6,7 @@ function NaiveBayesClf() {
     return new NaiveBayesClf();
   }
 
-  this.data = [];
+  this.data = { features: [], labels: [] };
   this.samplesTrained = 0;
 }
 
@@ -28,25 +28,32 @@ NaiveBayesClf.prototype.train = function () {
   self.unique_labels = new Set(labels_train);
   console.log("unique_labels", Array.from(self.unique_labels));
 
-  let dataLength = features_train.length;
-  initializeDataStore(dataLength, self.data, self.unique_labels);
-  // console.log("this.data", this.data);
+  let numFeatures = features_train[0].length;
+  initializeDataStore(numFeatures, self.data, self.unique_labels);
+  console.log("this.data", this.data);
 
-  features_train.forEach( (element, i) => {
-    let elements = wordsFromString(element[0]);
-
-    elements.forEach((word) => {
-      if (!self.data[i].words[word]){
-        addWordToDataStore(self.data[i], word, self.unique_labels);
-      }
-      self.data[i].words[word][labels_train[i]] += 1;
-      self.data[i].labels[labels_train[i]] += 1;
-    })
-
+  //for each training example (ie ['email body text', 'email subject text'])
+    //for each feature group in the training example, split into words
+      //for each word in the feature group
+        //if not already in the dataStore, add it
+        //increment the label ct for that word
+        //increment the total label count
+  features_train.forEach( (example, exampleIdx) => {
+    // console.log("example", example);
+    example.forEach( (feature, i) => {
+      let featureElements = wordsFromString(feature);
+      // console.log("featureElements", featureElements);
+      featureElements.forEach((word) => {
+        if (!self.data.features[i][word]){
+          addWordToDataStore(self.data.features[i], word, self.unique_labels);
+        }
+        self.data.features[i][word][labels_train[exampleIdx]] += 1;
+        self.data.labels[i][labels_train[exampleIdx]] += 1;
+      });
+    });
   });
-
-  // console.log("self.data[i]", util.inspect(self.data, false, null));
-  self.samplesTrained += dataLength;
+  console.log("dataStore after elements for each", util.inspect(self.data, false, null));
+  self.samplesTrained += features_train.length;
   console.log("number of samples trained", self.samplesTrained);
 }
 
@@ -56,17 +63,46 @@ NaiveBayesClf.prototype.predict = function (features_test) {
     labelScores = [],
     self = this;
 
-  //split each test string into an array of words
-  tests = processTests(features_test);
-
   //assumes each label is equally likely
   let pLabel = 1 / self.unique_labels.size;
 
-  tests.forEach( (test) => {
-    self.unique_labels.forEach( (label, i) => {
-      labelScores[i] = pOfLabel(label, pLabel, self.data, test, self.unique_labels)
+  // features_test.forEach( (example, exampleIdx) => {
+  //   console.log("testexample", example);
+  //   example.forEach( (feature, i) => {
+  //     let testFeatureElements = wordsFromString(feature);
+  //     console.log("testfeatureElements", testFeatureElements);
+  //     self.unique_labels.forEach( (label, i) => {
+  //     labelScores[i] = pOfLabel(label, pLabel, self.data, testFeatureElements, self.unique_labels);
+  //     });
+  //   });
+  // });
+
+  features_test.forEach( (example, exampleIdx) => {
+    console.log("testexample", example);
+    example.forEach( (feature, featureIdx) => {
+      console.log("feature", feature);
+      let testFeatureElements = wordsFromString(feature);
+      console.log("testfeatureElements", testFeatureElements);
+
+      self.unique_labels.forEach( (label, i) => {
+      labelScores[i] = pOfLabel(label, pLabel, self.data, testFeatureElements, self.unique_labels, self.data.features[featureIdx], self.data.labels[featureIdx]);
+      });
     });
   });
+
+
+
+
+  //split each test string into an array of words
+  // tests = processTests(features_test);
+
+
+  // tests.forEach( (test) => {
+  //   console.log("test", test);
+  //   self.unique_labels.forEach( (label, i) => {
+  //     labelScores[i] = pOfLabel(label, pLabel, self.data, test, self.unique_labels)
+  //   });
+  // });
 
   return labelScores;
 }
@@ -77,44 +113,49 @@ let wordsFromString = (str) => {
   return str.split(/\s+/);
 } 
 
-let initializeDataStore = (l, dataStore, unique_labels) => {
-  for(let i = 0; i < l; i++){
-    dataStore[i] = {
-      words: {},
-      labels: {}
-    };
+let initializeDataStore = (numFeatures, dataStore, unique_labels) => {
 
-    unique_labels.forEach( (label) => {dataStore[i].labels[label] = 0;});
+  for(let i = 0; i < numFeatures; i++){
+    dataStore.features[i] = {};
+    dataStore.labels[i] = {};
+
+    unique_labels.forEach( (label) => {dataStore.labels[i][label] = 0;});
   }
+
+  // console.log('initializeDataStore', dataStore);
 }
 
 let addWordToDataStore = (dataStore, word, unique_labels) => {
-  dataStore.words[word] = {};
-  unique_labels.forEach( (label) => { dataStore.words[word][label] = 0 });
+  dataStore[word] = {};
+  unique_labels.forEach( (label) => { dataStore[word][label] = 0 });
 }
 
-let processTests = (items) => {
-  let processed = [];
 
-  items.forEach( (item, i) => {
-    processed[i] = wordsFromString(item[0]);
-  })
 
-  return processed;
-}
+// let processTests = (items) => {
+//   let processed = [];
+//   items.forEach( (item, i) => {
+//     processed[i] = wordsFromString(item[0]);
+//   })
+//   return processed;
+// }
 
-let pOfLabel = (label, pLabel, dataStore, test, unique_labels) => {
+
+
+let pOfLabel = (label, pLabel, dataStore, test, unique_labels, featureData, labelData) => {
   //NEED TO ADD LAPLACE SMOOTHING
 
   //probabilites for a label
   let probabilities = [];
   console.log("");
   console.log("test", test);
+  console.log("featureData", featureData);
+
 
   test.forEach( (word) => {
 
     //first get P(word|label)
-    let pWordLabel = pOfWordGivenLabel(word, label, dataStore);
+    let pWordLabel = pOfWordGivenLabel(word, label, featureData, labelData);
     console.log(`probability of "${word}" given "${label}"`, pWordLabel);
 
     //now calculate P(word) which is P(word|label1) * P(label1) + ... P(word|labelN) * P(labelN)
@@ -142,25 +183,21 @@ let pOfLabel = (label, pLabel, dataStore, test, unique_labels) => {
   return 1 / ( 1 + Math.pow(Math.E, eta));
 }
 
-let pOfWordGivenLabel = (word, label, dataStore) => {
+let pOfWordGivenLabel = (word, label, featureData, labelData) => {
   // P(word|label) is num of times that word appears for a given label divided by the total count of all words for that label
   let ct = 0,
-      totalWordsForLabel = 0;
-
-  dataStore.forEach( (dataItem) => {
+      totalLabelCt = 0;
     // console.log(`searching for "${word}"`, util.inspect(dataItem.words[word], false, null));
-    if (dataItem.words[word] !== undefined){
+    if (featureData[word] !== undefined){
       //sum the number of times the word appeared for the given label
-      ct += dataItem.words[word][label];
+      ct += featureData[word][label];
     }
 
-    //sum the total number of words for the given label
-    for (let word in dataItem.words) {
-      totalWordsForLabel += dataItem.words[word][label];
-    }
-  });
+    //total number of words for the given label
+    console.log("labelData", labelData);
+    totalLabelCt = labelData[label];
 
-  return ct / totalWordsForLabel;
+  return ct / totalLabelCt;
 }
  
 module.exports = NaiveBayesClf;
