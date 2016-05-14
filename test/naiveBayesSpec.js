@@ -24,15 +24,23 @@ describe('Naive Bayes Classifier', function() {
     })
   });
 
+
   describe('nbc.train', function() {
-    beforeEach(function() {
-      let nbc = new NaiveBayesClf();
-    });
-
     it('should accept 2 arguments', function() {
-      expect( () => {nbc.train([1,1,1])}).toThrow(new Error("only accepts training features vector and training target values as arguments"));
+      expect( () => {
+        let nbc = new NaiveBayesClf();
+        nbc.train([1,1,1])
+      }).toThrow(new Error("only accepts training features vector and training target values as arguments"));
     });
 
+    it('should throw an error if the length of the training vectors dont match the length of the labels', function() {
+      expect( () => {
+        let nbc = new NaiveBayesClf();
+        nbc.train(['a', 'b', '9'], ['letter', 'letter'])
+      }).toThrow(new Error("length of your training vectors and target values do not match"))
+    });
+
+    
   });
 
 });
