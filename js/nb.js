@@ -8,7 +8,7 @@ function NaiveBayesClf() {
 
   this.data = { features: [], labels: [] };
   this.samplesTrained = 0;
-  this.featureWeights = [];
+  this.priors = [];
 }
 
 NaiveBayesClf.prototype.train = function () {
@@ -28,35 +28,39 @@ NaiveBayesClf.prototype.train = function () {
   self.unique_labels = new Set(labels_train);
 
   let numFeatures = features_train[0].length;
-  
-  if (!self.featureWeights.length){
-    for (let i = 0; i < numFeatures; i++){
-      self.featureWeights.push(1/numFeatures);
-    }
+
+  //initialize priors (can be overwritten in predict by passing in priors array)
+  for (let i = 0; i < self.unique_labels.size; i++){
+    self.priors.push(1 / self.unique_labels.size);
   }
 
+  //initialize dataStore
   initializeDataStore(numFeatures, self.data, self.unique_labels);
 
-  //for each training example (ie ['email body text', 'email subject text'])
-    //for each feature group in the training example, split into words
-      //for each word in the feature group
-        //if not already in the dataStore, add it
-        //increment the label ct for that word
-        //increment the total label count
+  /*
+    for each training example (ie ['email body text', 'email subject text'])
+      for each feature group in the training example, split into words
+        for each word in the feature group
+          if not already in the dataStore, add it
+          increment the label ct for that word
+          increment the total label count
+  */
   features_train.forEach( (example, exampleIdx) => {
-    // console.log("example", example);
     example.forEach( (feature, i) => {
       let featureElements = wordsFromString(feature);
-      // console.log("featureElements", featureElements);
+
       featureElements.forEach((word) => {
         if (!self.data.features[i][word]){
           addWordToDataStore(self.data.features[i], word, self.unique_labels);
         }
+
         self.data.features[i][word][labels_train[exampleIdx]] += 1;
         self.data.labels[i][labels_train[exampleIdx]] += 1;
       });
     });
   });
+
+
   console.log("dataStore after elements for each", util.inspect(self.data, false, null));
   self.samplesTrained += features_train.length;
 
@@ -64,7 +68,7 @@ NaiveBayesClf.prototype.train = function () {
 }
 
 
-NaiveBayesClf.prototype.predict = function (features_test) {
+NaiveBayesClf.prototype.predict = function (features_test, priorsLabel) {
   const self = this;
 
   let tests,
@@ -74,23 +78,23 @@ NaiveBayesClf.prototype.predict = function (features_test) {
 
   let numFeatures = features_test[0].length;
 
-  //assumes each label is equally likely
-  let pLabel = 1 / self.unique_labels.size;
+  //assumes each label is equally likely if priors not passed in
+  priorsLabel = priorsLabel || self.priors;
+
 
   features_test.forEach( (example, exampleIdx) => {
-    // console.log("testexample", example);
     labelScores[exampleIdx] = [];
 
     example.forEach( (feature, featureIdx) => {
       let testFeatureElements = wordsFromString(feature);
-      // console.log("testfeatureElements", testFeatureElements);
+
       labelScores[exampleIdx][featureIdx] = [];
 
       featureGroup = self.data.features[featureIdx];
       labelGroup = self.data.labels[featureIdx];
 
-      self.unique_labels.forEach( (label, i) => {
-        labelScores[exampleIdx][featureIdx][i] = pOfLabel(label, pLabel, testFeatureElements, self.unique_labels, featureGroup, labelGroup);
+      Array.from(self.unique_labels).forEach( (label, i, arr) => {
+        labelScores[exampleIdx][featureIdx][label] = pOfLabel(label, priorsLabel[i], testFeatureElements, self.unique_labels, featureGroup, labelGroup);
       });
     });
   });
@@ -102,23 +106,18 @@ NaiveBayesClf.prototype.predict = function (features_test) {
   features_test.forEach((test, i) => {
     //set up the structure for combined probs
     combined.push({});
+
     test.forEach( (group, j) => {
       self.unique_labels.forEach( (label) => {
-        // console.log("test, group, label", test, group, label);
-        // console.log("p", labelScores[i][j][label]);
-        // console.log(" ");
-
         //set each label to 1 if undefined and multiply by each P
         if (!combined[i][label]){
           combined[i][label] = 1;
-        } 
+        }
         combined[i][label] *= labelScores[i][j][label];
       });
     })
   });
 
-  // console.log("combined", combined);
-  // console.log("labelScores", labelScores);
   normalized = normalizeP(combined);
 
   return normalized;
@@ -168,12 +167,9 @@ let addWordToDataStore = (featureData, word, unique_labels) => {
 let pOfLabel = (label, pLabel, test, unique_labels, featureData, featureLabelData) => {
   //NEED TO ADD LAPLACE SMOOTHING
 
+
   //probabilites for a label
   let probabilities = [];
-  // console.log("");
-  // console.log("test", test);
-  // console.log("featureData", featureData);
-
 
   test.forEach( (word) => {
     //first get P(word|label)
@@ -195,9 +191,8 @@ let pOfLabel = (label, pLabel, test, unique_labels, featureData, featureLabelDat
   /* combine all of the Psub(i)'s for the labels into the final prob for each label
   will compute in log space -> https://en.wikipedia.org/wiki/Naive_Bayes_spam_filtering#Other_expression_of_the_formula_for_combining_individual_probabilities
   */
-  let probsLn = probabilities.map( (p) => p != 0 ? (p < 1 ? (Math.log(1- p) - Math.log(p)) : 0) : p);
+  let probsLn = probabilities.map( (p) => p == 0 ? 5 : (p == 1 ? -5 : (Math.log(1 - p) - Math.log(p))));
 
-  // console.log("probs ln", probsLn);
 
   let eta = probsLn.reduce( (prev, curr) => prev + curr);
 
