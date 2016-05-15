@@ -5,7 +5,7 @@ This is mainly geared towards text based applications (i.e. classifying emails a
 - [ ] Laplace correction
 - [X] Calculate probabilites in log space to prevent floating point underflow
 - [ ] Support for reading in file as training data (in progress)
-- [ ] Pass in prior probabilities for each label (currently priors are all equal)
+- [X] Pass in prior probabilities for each label (default: priors are all equal)
 
 
 ### How to use it:
