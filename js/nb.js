@@ -1,5 +1,5 @@
 "use strict";
-// var util = require('util');
+var util = require('util');
 
 function NaiveBayesClf() {
   if (!this){
@@ -217,4 +217,4 @@ let pOfWordGivenLabel = (word, label, featureData, featureLabelData) => {
   return ct / totalLabelCt;
 }
  
-// module.exports = NaiveBayesClf;
+module.exports = NaiveBayesClf;
