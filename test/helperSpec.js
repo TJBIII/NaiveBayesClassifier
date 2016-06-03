@@ -4,7 +4,7 @@ let dataStore = {
     features: [ 
       { 
         attention: { spam: 2, 'not spam': 0 },
-        money: { spam: 2, 'not spam': 0 },
+        money: { spam: 2, 'not spam': 1 },
         please: { spam: 1, 'not spam': 1 },
         give: { spam: 1, 'not spam': 0 },
         me: { spam: 1, 'not spam': 1 },
@@ -40,7 +40,7 @@ let dataStore = {
       } 
     ],
     labels: [ 
-      { spam: 14, 'not spam': 16 }, 
+      { spam: 14, 'not spam': 17 }, 
       { spam: 7, 'not spam': 2 } 
     ] 
   };
@@ -66,9 +66,9 @@ describe('Naive Bayes Classifier helper functions', function() {
 
     it('should return the correct probability P(word|label)', function() {
       expect(pOfWordGivenLabel('me', 'spam', words, labels)).toEqual(1/14);
-      expect(pOfWordGivenLabel('me', 'not spam', words, labels)).toEqual(1/16);
+      expect(pOfWordGivenLabel('me', 'not spam', words, labels)).toEqual(1/17);
       expect(pOfWordGivenLabel('money', 'spam', words, labels)).toEqual(2/14);
-      expect(pOfWordGivenLabel('money', 'not spam', words, labels)).toEqual(0);
+      expect(pOfWordGivenLabel('money', 'not spam', words, labels)).toEqual(1/17);
     });
   
     it('should return 0 for a word not in the dataStore', function() {
