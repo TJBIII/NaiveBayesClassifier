@@ -2,6 +2,8 @@
 
 This is mainly geared towards text based applications (i.e. classifying emails as spam or not spam, classifying song lyrics to a specific artist, etc). This was not made to be a robust NB classifier to handle all possible feature structures/types. It was made to get more familiar with NB classifiers and for general Javascript practice.
 
+I wrote a [blog post](http://www.tjbiii.com/Naive-Bayes-Classifier.html) about Bayes' Theroem and naive Bayes classifiers.
+
 ### Punch list for future
 - [ ] Laplace correction
 - [X] Calculate probabilites in log space to prevent floating point underflow

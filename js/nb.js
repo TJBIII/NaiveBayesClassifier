@@ -61,9 +61,8 @@ NaiveBayesClf.prototype.train = function () {
   });
 
 
-  console.log("dataStore after elements for each", util.inspect(self.data, false, null));
+  // console.log("dataStore after elements for each", util.inspect(self.data, false, null));
   self.samplesTrained += features_train.length;
-
   console.log("number of samples trained", self.samplesTrained);
 }
 
@@ -167,7 +166,6 @@ let addWordToDataStore = (featureData, word, unique_labels) => {
 let pOfLabel = (label, pLabel, test, unique_labels, featureData, featureLabelData) => {
   //NEED TO ADD LAPLACE SMOOTHING
 
-
   //probabilites for a label
   let probabilities = [];
 
@@ -183,7 +181,6 @@ let pOfLabel = (label, pLabel, test, unique_labels, featureData, featureLabelDat
       pWord += pOfWordGivenLabel(word, label, featureData, featureLabelData) * pLabel;
     })
     // console.log(`probability of "${word}" is`, pWord);
-    // console.log("");
 
     probabilities.push( pWord > 0 ? (pWordLabel * pLabel) / pWord  : 0 );
   });
@@ -205,7 +202,7 @@ let pOfWordGivenLabel = (word, label, featureData, featureLabelData) => {
   */
   let ct = 0,
       totalLabelCt = 0;
-    // console.log(`searching for "${word}"`, util.inspect(dataItem.words[word], false, null));
+
     if (featureData[word] !== undefined){
       //sum the number of times the word appeared for the given label
       ct += featureData[word][label];

@@ -11,8 +11,8 @@ let nbc = new NaiveBayesClf();
 
 /****** SPAM EMAIL EXAMPLE 2 ******/
 
-// nbc.train([['attention money please give me'],['attention your service money requested'],['hey dad how are you please'], ['buy our pills today'], ['hey do you want to meet me at the bar']], ['spam','spam','not spam', 'spam', 'not spam']);
-// console.log('prediction', nbc.predict([['please me']]));
+nbc.train([['attention money please give me'],['attention your service money requested'],['hey dad how are you please money'], ['buy our pills today'], ['hey do you want to meet me at the bar']], ['spam','spam','not spam', 'spam', 'not spam']);
+console.log('prediction', nbc.predict([['money']]));
 
 
 // nbc.train([['attention money please give me', 're: must read'],['attention your service money requested', 're: attention'],['hey dad how are you please', 'update'], ['buy our pills today','act now!'], ['hey do you want to meet me at the bar', 'friday']], ['spam','spam','not spam', 'spam', 'not spam']);
@@ -44,6 +44,6 @@ let nbc = new NaiveBayesClf();
 
 // nbc.train(features_train, labels_train);
 
-// console.log("predict: 'i'll love you metal face':", nbc.predict([['i\'ll love metal face']]));
-// console.log("predict: 'metal face villain':", nbc.predict([['known amongst face figaro gin tang nimble fang']]));
+// console.log("predict: 'i'll love you':", nbc.predict([['i\'ll love you']]));
+// console.log("predict: 'metal face villain':", nbc.predict([['metal face villain']]));
 // console.log("predict: 'psycho tails tied science fiction drop':", nbc.predict([['psycho tails tied science fiction drop']]));
