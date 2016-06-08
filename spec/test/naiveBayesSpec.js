@@ -1,5 +1,7 @@
 "use strict";
 
+let NaiveBayesClf = require('../../js/nb.js');
+
 describe('Naive Bayes Classifier', function() {
 
   describe('Naive Bayes classifier exists', function() {

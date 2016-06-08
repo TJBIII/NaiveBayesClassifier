@@ -1,5 +1,7 @@
 "use strict";
 
+let helper = require('../../js/helper.js');
+
 let dataStore = { 
     features: [ 
       { 
@@ -49,12 +51,12 @@ describe('Naive Bayes Classifier helper functions', function() {
 
   describe('wordsFromString', function() {
     it('should break a string into words', function() {
-      expect(wordsFromString('this is a test string')).toEqual(['this', 'is', 'a', 'test', 'string']);
-      expect(wordsFromString(' this is another  test string with extra spaces  ')).toEqual(['this', 'is', 'another', 'test', 'string', 'with', 'extra', 'spaces']);
+      expect(helper.wordsFromString('this is a test string')).toEqual(['this', 'is', 'a', 'test', 'string']);
+      expect(helper.wordsFromString(' this is another  test string with extra spaces  ')).toEqual(['this', 'is', 'another', 'test', 'string', 'with', 'extra', 'spaces']);
     });
 
     it('should remove unwanted punctuation', function() {
-      expect(wordsFromString('t<h>"is i;s a -test wi(t)h? p\'unc_,')).toEqual(['this', 'is', 'a', 'test', 'with', 'punc'])
+      expect(helper.wordsFromString('t<h>"is i;s a -test wi(t)h? p\'unc_,')).toEqual(['this', 'is', 'a', 'test', 'with', 'punc'])
     
     });
   });
@@ -65,15 +67,15 @@ describe('Naive Bayes Classifier helper functions', function() {
     let labels = dataStore.labels[0];
 
     it('should return the correct probability P(word|label)', function() {
-      expect(pOfWordGivenLabel('me', 'spam', words, labels)).toEqual(1/14);
-      expect(pOfWordGivenLabel('me', 'not spam', words, labels)).toEqual(1/17);
-      expect(pOfWordGivenLabel('money', 'spam', words, labels)).toEqual(2/14);
-      expect(pOfWordGivenLabel('money', 'not spam', words, labels)).toEqual(1/17);
+      expect(helper.pOfWordGivenLabel('me', 'spam', words, labels)).toEqual(1/14);
+      expect(helper.pOfWordGivenLabel('me', 'not spam', words, labels)).toEqual(1/17);
+      expect(helper.pOfWordGivenLabel('money', 'spam', words, labels)).toEqual(2/14);
+      expect(helper.pOfWordGivenLabel('money', 'not spam', words, labels)).toEqual(1/17);
     });
   
     it('should return 0 for a word not in the dataStore', function() {
-      expect(pOfWordGivenLabel('villian', 'spam', words, labels)).toEqual(0);
-      expect(pOfWordGivenLabel('supercalifragilisticexpialidocious', 'not spam', words, labels)).toEqual(0);    
+      expect(helper.pOfWordGivenLabel('villian', 'spam', words, labels)).toEqual(0);
+      expect(helper.pOfWordGivenLabel('supercalifragilisticexpialidocious', 'not spam', words, labels)).toEqual(0);    
     });
   });
 
@@ -81,7 +83,7 @@ describe('Naive Bayes Classifier helper functions', function() {
   describe('initializeDataStore', function() {
     it('should set up the data store', function() {
       let dataStore = { features: [], labels: [] };
-      initializeDataStore(2, dataStore, new Set(['spam', 'not spam']));
+      helper.initializeDataStore(2, dataStore, new Set(['spam', 'not spam']));
 
       expect(dataStore).toEqual(
         { features: [{},{}],
@@ -96,7 +98,7 @@ describe('Naive Bayes Classifier helper functions', function() {
     it('should add the word with the labels', function() {
       let features = {},
           unique_labels = new Set(['spam', 'not spam']);
-      addWordToDataStore(features, "word1", unique_labels)
+      helper.addWordToDataStore(features, "word1", unique_labels)
       expect(features).toEqual({'word1': {spam: 0, 'not spam': 0 } })
     });
   });
@@ -106,13 +108,13 @@ describe('Naive Bayes Classifier helper functions', function() {
     it('should normalize the probabilites so they add up to one', function() {
       let probs = [ { spam: 0.28318584070796454, 'not spam': 0.21681415929203543 },
                   { spam: 0.26666666666666666, 'not spam': 0.23333333333333334 } ];
-      expect(normalizeP(probs)).toEqual([ { spam: 0.5663716814159291, 'not spam': 0.43362831858407086 },
+      expect(helper.normalizeP(probs)).toEqual([ { spam: 0.5663716814159291, 'not spam': 0.43362831858407086 },
           { spam: 0.5333333333333333, 'not spam': 0.4666666666666667 } ]);
     });
 
     it('should return the same probs if already normalized', function () {
       let probs = [ {spam: 0.6, 'not spam': 0.4}];
-      expect(normalizeP(probs)).toEqual(probs)
+      expect(helper.normalizeP(probs)).toEqual(probs)
 
     })
   });
