@@ -1,5 +1,8 @@
 "use strict";
-var util = require('util');
+let util = require('util');
+let helper = require('./helper.js');
+let wordsFromString = helper.wordsFromString;
+
 
 function NaiveBayesClf() {
   if (!this){
@@ -11,18 +14,20 @@ function NaiveBayesClf() {
   this.priors = [];
 }
 
+
+
 NaiveBayesClf.prototype.train = function () {
   const self = this;
 
   if (arguments.length !== 2){
-    throw new Error("only accepts training features vector and training target values as arguments")
+    throw new Error("only accepts training features vector and training target values as arguments");
   }
 
   let features_train = arguments[0];
   let labels_train = arguments[1];
 
   if (features_train.length !== labels_train.length){
-    throw new Error("length of your training vectors and target values do not match")
+    throw new Error("length of your training vectors and target values do not match");
   }
 
   self.unique_labels = new Set(labels_train);
@@ -35,7 +40,7 @@ NaiveBayesClf.prototype.train = function () {
   }
 
   //initialize dataStore
-  initializeDataStore(numFeatures, self.data, self.unique_labels);
+  helper.initializeDataStore(numFeatures, self.data, self.unique_labels);
 
   /*
     for each training example (ie ['email body text', 'email subject text'])
@@ -51,7 +56,7 @@ NaiveBayesClf.prototype.train = function () {
 
       featureElements.forEach((word) => {
         if (!self.data.features[i][word]){
-          addWordToDataStore(self.data.features[i], word, self.unique_labels);
+          helper.addWordToDataStore(self.data.features[i], word, self.unique_labels);
         }
 
         self.data.features[i][word][labels_train[exampleIdx]] += 1;
@@ -64,7 +69,8 @@ NaiveBayesClf.prototype.train = function () {
   // console.log("dataStore after elements for each", util.inspect(self.data, false, null));
   self.samplesTrained += features_train.length;
   console.log("number of samples trained", self.samplesTrained);
-}
+};
+
 
 
 NaiveBayesClf.prototype.predict = function (features_test, priorsLabel) {
@@ -93,7 +99,7 @@ NaiveBayesClf.prototype.predict = function (features_test, priorsLabel) {
       labelGroup = self.data.labels[featureIdx];
 
       Array.from(self.unique_labels).forEach( (label, i, arr) => {
-        labelScores[exampleIdx][featureIdx][label] = pOfLabel(label, priorsLabel[i], testFeatureElements, self.unique_labels, featureGroup, labelGroup);
+        labelScores[exampleIdx][featureIdx][label] = helper.pOfLabel(label, priorsLabel[i], testFeatureElements, self.unique_labels, featureGroup, labelGroup);
       });
     });
   });
@@ -114,104 +120,12 @@ NaiveBayesClf.prototype.predict = function (features_test, priorsLabel) {
         }
         combined[i][label] *= labelScores[i][j][label];
       });
-    })
+    });
   });
 
-  normalized = normalizeP(combined);
+  normalized = helper.normalizeP(combined);
 
   return normalized;
-}
-
-
-let wordsFromString = (str) => {
-  str = str.replace(/[,'.?"\-;()<>\[\]_]/g, "");
-  str = str.trim();
-  return str.split(/\s+/);
-} 
-
-
-let normalizeP = (probList) => {
-  //normalize probabilites so they sum to 1
-  probList.forEach( (group) => {
-    let sum = 0;
-    for (var key in group){
-      sum += group[key];
-    }
-
-    for (var key in group) {
-      group[key] /= sum;
-    }
-  });
-
-  return probList;
-}
-
-
-let initializeDataStore = (numFeatures, dataStore, unique_labels) => {
-  for(let i = 0; i < numFeatures; i++){
-    dataStore.features[i] = {};
-    dataStore.labels[i] = {};
-
-    unique_labels.forEach( (label) => {dataStore.labels[i][label] = 0;});
-  }
-}
-
-
-let addWordToDataStore = (featureData, word, unique_labels) => {
-  featureData[word] = {};
-  unique_labels.forEach( (label) => { featureData[word][label] = 0 });
-}
-
-
-let pOfLabel = (label, pLabel, test, unique_labels, featureData, featureLabelData) => {
-  //NEED TO ADD LAPLACE SMOOTHING
-
-  //probabilites for a label
-  let probabilities = [];
-
-  test.forEach( (word) => {
-    //first get P(word|label)
-    let pWordLabel = pOfWordGivenLabel(word, label, featureData, featureLabelData);
-    // console.log(`probability of "${word}" given "${label}"`, pWordLabel);
-
-    //now calculate P(word) which is P(word|label1) * P(label1) + ... P(word|labelN) * P(labelN)
-    let pWord = 0
-    unique_labels.forEach( (label) => {
-      // console.log("pword", pWord);
-      pWord += pOfWordGivenLabel(word, label, featureData, featureLabelData) * pLabel;
-    })
-    // console.log(`probability of "${word}" is`, pWord);
-
-    probabilities.push( pWord > 0 ? (pWordLabel * pLabel) / pWord  : 0 );
-  });
-
-  /* combine all of the Psub(i)'s for the labels into the final prob for each label
-  will compute in log space -> https://en.wikipedia.org/wiki/Naive_Bayes_spam_filtering#Other_expression_of_the_formula_for_combining_individual_probabilities
-  */
-  let probsLn = probabilities.map( (p) => p == 0 ? 5 : (p == 1 ? -5 : (Math.log(1 - p) - Math.log(p))));
-
-
-  let eta = probsLn.reduce( (prev, curr) => prev + curr);
-
-  return 1 / ( 1 + Math.pow(Math.E, eta));
-}
-
-
-let pOfWordGivenLabel = (word, label, featureData, featureLabelData) => {
-  /* P(word|label) is num of times that word appears for a given label divided by the total count of all words for that label
-  */
-  let ct = 0,
-      totalLabelCt = 0;
-
-    if (featureData[word] !== undefined){
-      //sum the number of times the word appeared for the given label
-      ct += featureData[word][label];
-    }
-
-    //total number of words for the given label
-    totalLabelCt = featureLabelData[label];
-
-  return ct / totalLabelCt;
-}
+};
  
 module.exports = NaiveBayesClf;

@@ -10,18 +10,20 @@ let nbc = new NaiveBayesClf();
 // console.log('prediction', nbc.predict([['please give me money to buy viagra today as your service requested']]));
 
 /****** SPAM EMAIL EXAMPLE 2 ******/
+// nbc.train([['attention money please give me'],['attention your service money requested'],['hey dad how are you please money'], ['buy our pills today'], ['hey do you want to meet me at the bar']], ['spam','spam','not spam', 'spam', 'not spam']);
+// console.log('prediction', nbc.predict([['money']]));
 
-nbc.train([['attention money please give me'],['attention your service money requested'],['hey dad how are you please money'], ['buy our pills today'], ['hey do you want to meet me at the bar']], ['spam','spam','not spam', 'spam', 'not spam']);
-console.log('prediction', nbc.predict([['money']]));
-
-
+/****** SPAM EMAIL EXAMPLE 3 ******/
+/****** TWO FEATURES: EMAIL BODY AND EMAIL SUBJECT LINE ******/
 // nbc.train([['attention money please give me', 're: must read'],['attention your service money requested', 're: attention'],['hey dad how are you please', 'update'], ['buy our pills today','act now!'], ['hey do you want to meet me at the bar', 'friday']], ['spam','spam','not spam', 'spam', 'not spam']);
 // console.log('prediction', nbc.predict([['please give me money today', 'friday'], ['dad meet at the bar please', 'friday']]));
 
+/****** SPAM EMAIL EXAMPLE 4 ******/
+/****** THREE FEATURES ******/
 // nbc.train([['attention money please give me', 're: must read', 'this is crazy'],['attention your service money requested', 're: attention', 'this is weird'],['hey dad how are you please', 'update', 'talk to you soon'], ['buy our pills today','act now!', 'this is amazing'], ['hey do you want to meet me at the bar', 'friday', 'this friday']], ['spam','spam','not spam', 'spam', 'not spam']);
 // console.log('prediction', nbc.predict([['please give me money today attention', 're: friday', 'this now'], ['dad meet at the bar please', 'friday', ' talk to you soon'], ['wat money', 'test', 'test']]));
 
-// /****** Lyrics Example 1 ******/
+// /****** LYRICS EXAMPLE 1 ******/
 // let features_train_doom = fs.readFileSync('doomLyrics.txt').toString().split('\n');
 // let labels_train = [];
 // features_train_doom = features_train_doom.map( (e) => {
